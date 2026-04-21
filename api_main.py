@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract, and_, desc
 from datetime import datetime, timedelta
+import os
 import time
 from typing import List, Optional
 
@@ -13,9 +14,24 @@ import schemas
 app = FastAPI(title="Job Market Skills Trend API")
 
 # CORS Configuration
+# Explicit origins (localhost dev + any custom production domain)
+_explicit_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+# Add FRONTEND_URL from env if set (e.g. https://your-app.vercel.app)
+_frontend_url = os.getenv("FRONTEND_URL", "").strip()
+if _frontend_url:
+    _explicit_origins.append(_frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "localhost:5173"],
+    allow_origins=_explicit_origins,
+    # Matches any Vercel preview/production deployment: *.vercel.app
+    # Now explicitly supporting http and https for maximum flexibility
+    allow_origin_regex=r"https?://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

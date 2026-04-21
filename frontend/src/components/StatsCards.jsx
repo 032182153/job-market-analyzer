@@ -1,17 +1,51 @@
 import React from 'react';
 import { Briefcase, Building2, Calendar, TrendingUp } from 'lucide-react';
 
-const StatCard = ({ title, value, icon: Icon, color }) => (
-  <div className="glass-card flex items-center space-x-4">
-    <div className={`p-3 rounded-xl bg-${color}/10 text-${color}`}>
-      <Icon size={24} />
+const STAT_CONFIG = {
+  totalJobs: {
+    title: 'Total Jobs',
+    icon: Briefcase,
+    bg: 'bg-blue-500/10',
+    text: 'text-blue-400'
+  },
+  companies: {
+    title: 'Unique Companies',
+    icon: Building2,
+    bg: 'bg-purple-500/10',
+    text: 'text-purple-400'
+  },
+  dateRange: {
+    title: 'Date Range',
+    icon: Calendar,
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-400'
+  },
+  topRole: {
+    title: 'Top Role',
+    icon: TrendingUp,
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400'
+  }
+};
+
+const StatCard = ({ value, type }) => {
+  const config = STAT_CONFIG[type];
+  if (!config) return null;
+  
+  const Icon = config.icon;
+
+  return (
+    <div className="glass-card flex items-center space-x-4">
+      <div className={`p-3 rounded-xl ${config.bg} ${config.text}`}>
+        <Icon size={24} />
+      </div>
+      <div>
+        <p className="text-slate-400 text-sm font-medium">{config.title}</p>
+        <p className="text-2xl font-bold text-white">{value}</p>
+      </div>
     </div>
-    <div>
-      <p className="text-slate-400 text-sm font-medium">{title}</p>
-      <p className="text-2xl font-bold text-white">{value}</p>
-    </div>
-  </div>
-);
+  );
+};
 
 const StatsCards = ({ stats, isLoading }) => {
   if (isLoading) {
@@ -26,29 +60,21 @@ const StatsCards = ({ stats, isLoading }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <StatCard 
-        title="Total Jobs" 
-        value={stats?.total_jobs?.toLocaleString()} 
-        icon={Briefcase} 
-        color="blue-500" 
+      <StatCard
+        type="totalJobs"
+        value={stats?.total_jobs?.toLocaleString()}
       />
-      <StatCard 
-        title="Unique Companies" 
-        value={stats?.total_companies?.toLocaleString()} 
-        icon={Building2} 
-        color="purple-500" 
+      <StatCard
+        type="companies"
+        value={stats?.total_companies?.toLocaleString()}
       />
-      <StatCard 
-        title="Date Range" 
-        value={stats?.date_range} 
-        icon={Calendar} 
-        color="emerald-500" 
+      <StatCard
+        type="dateRange"
+        value={stats?.date_range}
       />
-      <StatCard 
-        title="Top Role" 
-        value={stats?.top_role} 
-        icon={TrendingUp} 
-        color="amber-500" 
+      <StatCard
+        type="topRole"
+        value={stats?.top_role}
       />
     </div>
   );
