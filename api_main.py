@@ -20,6 +20,7 @@ _explicit_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
+    "https://job-market-analyzer-iota.vercel.app",
 ]
 # Add FRONTEND_URL from env if set (e.g. https://your-app.vercel.app)
 _frontend_url = os.getenv("FRONTEND_URL", "").strip()
