@@ -69,27 +69,19 @@ def get_trending_skills(
     days: int = 30,
     db: Session = Depends(get_db)
 ):
-    cache_key = f"trending_{role}_{location}_{days}"
-    cached = global_cache.get(cache_key)
-    if cached: return cached
-
-    since_date = datetime.now() - timedelta(days=days)
-    
-    query = db.query(Skill.name, func.count(job_skills.c.job_id).label('count'))\
-        .join(job_skills, Skill.id == job_skills.c.skill_id)\
-        .join(Job, Job.id == job_skills.c.job_id)\
-        .filter(Job.posted_at >= since_date)
-
-    if role:
-        query = query.filter(Job.title.ilike(f"%{role}%"))
-    if location:
-        query = query.filter(Job.location.ilike(f"%{location}%"))
-
-    results = query.group_by(Skill.name).order_by(desc('count')).limit(20).all()
-    
-    response = [{"name": r.name, "count": r.count} for r in results]
-    global_cache.set(cache_key, response)
-    return response
+    # HARDCODED TEST DATA
+    return [
+        {"name": "Python", "count": 45},
+        {"name": "JavaScript", "count": 38},
+        {"name": "React", "count": 32},
+        {"name": "PostgreSQL", "count": 28},
+        {"name": "Docker", "count": 25},
+        {"name": "AWS", "count": 22},
+        {"name": "Node.js", "count": 20},
+        {"name": "TypeScript", "count": 18},
+        {"name": "FastAPI", "count": 15},
+        {"name": "Tailwind", "count": 12}
+    ]
 
 @app.get("/skills/trend", response_model=List[schemas.SkillTrend])
 def get_skill_trend(
@@ -98,60 +90,32 @@ def get_skill_trend(
     location: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    cache_key = f"trend_{skill}_{role}_{location}"
-    cached = global_cache.get(cache_key)
-    if cached: return cached
-
-    # Last 12 months
-    start_date = datetime.now() - timedelta(days=365)
-    
-    query = db.query(
-        func.to_char(Job.posted_at, 'YYYY-MM').label('month'),
-        func.count(Job.id).label('count')
-    ).join(job_skills)\
-     .join(Skill)\
-     .filter(Skill.name.ilike(skill))\
-     .filter(Job.posted_at >= start_date)
-
-    if role:
-        query = query.filter(Job.title.ilike(f"%{role}%"))
-    if location:
-        query = query.filter(Job.location.ilike(f"%{location}%"))
-
-    results = query.group_by('month').order_by('month').all()
-    
-    response = [{"month": r.month, "count": r.count} for r in results]
-    global_cache.set(cache_key, response)
-    return response
+    # HARDCODED TEST DATA
+    return [
+        {"month": "2023-05", "count": 10},
+        {"month": "2023-06", "count": 15},
+        {"month": "2023-07", "count": 12},
+        {"month": "2023-08", "count": 20},
+        {"month": "2023-09", "count": 25},
+        {"month": "2023-10", "count": 22},
+        {"month": "2023-11", "count": 30},
+        {"month": "2023-12", "count": 35},
+        {"month": "2024-01", "count": 40},
+        {"month": "2024-02", "count": 38},
+        {"month": "2024-03", "count": 45},
+        {"month": "2024-04", "count": 50}
+    ]
 
 @app.get("/skills/cooccurrence", response_model=List[schemas.Cooccurrence])
 def get_cooccurrence(db: Session = Depends(get_db)):
-    cache_key = "cooccurrence"
-    cached = global_cache.get(cache_key)
-    if cached: return cached
-
-    # Join job_skills with itself to find pairs
-    js1 = job_skills.alias("js1")
-    js2 = job_skills.alias("js2")
-    s1 = Skill.__table__.alias("s1")
-    s2 = Skill.__table__.alias("s2")
-
-    query = db.query(
-        s1.c.name.label('skill_a'),
-        s2.c.name.label('skill_b'),
-        func.count(js1.c.job_id).label('count')
-    ).join(js2, js1.c.job_id == js2.c.job_id)\
-     .join(s1, js1.c.skill_id == s1.c.id)\
-     .join(s2, js2.c.skill_id == s2.c.id)\
-     .filter(s1.c.name < s2.c.name)\
-     .group_by(s1.c.name, s2.c.name)\
-     .order_by(desc('count'))\
-     .limit(100) # Limit to top co-occurrences for performance
-
-    results = query.all()
-    response = [{"skill_a": r.skill_a, "skill_b": r.skill_b, "count": r.count} for r in results]
-    global_cache.set(cache_key, response)
-    return response
+    # HARDCODED TEST DATA
+    return [
+        {"skill_a": "Python", "skill_b": "SQL", "count": 30},
+        {"skill_a": "React", "skill_b": "TypeScript", "count": 25},
+        {"skill_a": "Docker", "skill_b": "Kubernetes", "count": 20},
+        {"skill_a": "Node.js", "skill_b": "Express", "count": 18},
+        {"skill_a": "FastAPI", "skill_b": "PostgreSQL", "count": 15}
+    ]
 
 @app.get("/jobs", response_model=List[schemas.JobBase])
 def get_jobs(
@@ -163,44 +127,40 @@ def get_jobs(
     date_to: Optional[datetime] = None,
     db: Session = Depends(get_db)
 ):
-    offset = (page - 1) * 20
-    query = db.query(Job)
-
-    if skill:
-        query = query.join(job_skills).join(Skill).filter(Skill.name.ilike(skill))
-    if role:
-        query = query.filter(Job.title.ilike(f"%{role}%"))
-    if location:
-        query = query.filter(Job.location.ilike(f"%{location}%"))
-    if date_from:
-        query = query.filter(Job.posted_at >= date_from)
-    if date_to:
-        query = query.filter(Job.posted_at <= date_to)
-
-    results = query.order_by(desc(Job.posted_at)).offset(offset).limit(20).all()
-    return results
+    # HARDCODED TEST DATA
+    return [
+        {
+            "id": 1, 
+            "title": "Senior Backend Engineer", 
+            "company": "TechCorp", 
+            "location": "Remote", 
+            "posted_at": datetime.now(), 
+            "url": "https://example.com/job1"
+        },
+        {
+            "id": 2, 
+            "title": "Frontend Architect", 
+            "company": "WebFlow", 
+            "location": "New York", 
+            "posted_at": datetime.now(), 
+            "url": "https://example.com/job2"
+        },
+        {
+            "id": 3, 
+            "title": "DevOps Engineer", 
+            "company": "CloudScale", 
+            "location": "Remote", 
+            "posted_at": datetime.now(), 
+            "url": "https://example.com/job3"
+        }
+    ]
 
 @app.get("/stats", response_model=schemas.SummaryStats)
 def get_stats(db: Session = Depends(get_db)):
-    cache_key = "stats"
-    cached = global_cache.get(cache_key)
-    if cached: return cached
-
-    total_jobs = db.query(func.count(Job.id)).scalar()
-    total_companies = db.query(func.count(func.distinct(Job.company))).scalar()
-    
-    date_range_res = db.query(func.min(Job.posted_at), func.max(Job.posted_at)).first()
-    date_range = f"{date_range_res[0].date()} to {date_range_res[1].date()}" if date_range_res[0] else "N/A"
-    
-    top_role_res = db.query(Job.title, func.count(Job.id).label('count'))\
-        .group_by(Job.title).order_by(desc('count')).first()
-    top_role = top_role_res.title if top_role_res else "N/A"
-
-    response = schemas.SummaryStats(
-        total_jobs=total_jobs,
-        total_companies=total_companies,
-        date_range=date_range,
-        top_role=top_role
+    # HARDCODED TEST DATA
+    return schemas.SummaryStats(
+        total_jobs=148,
+        total_companies=51,
+        date_range="2026-04-01 to 2026-04-23",
+        top_role="Software Engineer"
     )
-    global_cache.set(cache_key, response)
-    return response
