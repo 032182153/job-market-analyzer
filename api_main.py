@@ -38,6 +38,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def health_check():
+    return {"status": "ok", "message": "Job Market Skills Trend API is running"}
+
 # Simple In-Memory Cache
 class SimpleCache:
     def __init__(self, expire_seconds=3600):
